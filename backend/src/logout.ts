@@ -22,6 +22,11 @@ async function logout(req: Request, res: Response): Promise<void> {
     where: { id: row.id },
     data: { isRevoked: true },
   });
+  // Invalidate all access tokens for this user (revocation); they check tokenVersion in requireAuth.
+  await prisma.user.update({
+    where: { id: row.userId },
+    data: { tokenVersion: { increment: 1 } },
+  });
   res.json({ message: 'Logged out successfully' });
 }
 

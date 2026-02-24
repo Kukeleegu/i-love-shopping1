@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { prisma } from '../db';
 
 // Extend Express Request so handlers can use req.user
 declare global {
@@ -12,9 +13,9 @@ declare global {
 
 /**
  * Auth middleware: verifies the access token and sets req.user.
- * Use on routes that require login (e.g. GET /api/users/me).
+ * Rejects if token is expired, invalid, or revoked (user.tokenVersion mismatch).
  */
-export function requireAuth(req: Request, res: Response, next: NextFunction): void {
+export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -29,7 +30,15 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   }
 
   try {
-    const decoded = jwt.verify(token, secret) as { userId: string };
+    const decoded = jwt.verify(token, secret) as { userId: string; tokenVersion?: number };
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: { tokenVersion: true },
+    });
+    if (!user || user.tokenVersion !== (decoded.tokenVersion ?? 0)) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
     req.user = { userId: decoded.userId };
     next();
   } catch {
@@ -37,8 +46,8 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   }
 }
 
-/** Optional auth: sets req.user if Bearer token is valid; does not 401 if missing or invalid. */
-export function optionalAuth(req: Request, _res: Response, next: NextFunction): void {
+/** Optional auth: sets req.user if Bearer token is valid and not revoked; does not 401 if missing or invalid. */
+export async function optionalAuth(req: Request, _res: Response, next: NextFunction): Promise<void> {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     next();
@@ -51,8 +60,14 @@ export function optionalAuth(req: Request, _res: Response, next: NextFunction): 
     return;
   }
   try {
-    const decoded = jwt.verify(token, secret) as { userId: string };
-    req.user = { userId: decoded.userId };
+    const decoded = jwt.verify(token, secret) as { userId: string; tokenVersion?: number };
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: { tokenVersion: true },
+    });
+    if (user && user.tokenVersion === (decoded.tokenVersion ?? 0)) {
+      req.user = { userId: decoded.userId };
+    }
   } catch {
     // leave req.user undefined
   }

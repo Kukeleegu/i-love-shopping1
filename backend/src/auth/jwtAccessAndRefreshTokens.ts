@@ -8,7 +8,10 @@ import { prisma } from '../db';
 
 async function generateAccessToken(userId: string): Promise<{ accessToken: string } | { error: string }> {
   if (!process.env.ACCESS_TOKEN_SECRET) return { error: 'ACCESS_TOKEN_SECRET is not set' };
-  return { accessToken: jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30m' }) };
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { tokenVersion: true } });
+  if (!user) return { error: 'User not found' };
+  const payload = { userId, tokenVersion: user.tokenVersion };
+  return { accessToken: jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30m' }) };
 }
 
 async function generateRefreshToken(userId: string): Promise<{ refreshToken: string } | { error: string }> {
