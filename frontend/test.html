@@ -290,7 +290,8 @@
 
     <script>
         // --- Tester: API base, tokens; apply hash (OAuth/2FA), then health/register/login/logout/refresh/me/products/password/2FA ---
-        // Access token: memory only (never localStorage). Refresh token: may be in localStorage for refresh-on-reload.
+        // Access token: memory only (never in localStorage). Refresh token: may be in localStorage for refresh-on-reload.
+        localStorage.removeItem('accessToken'); // Ensure access token is never persisted (security).
         const API_BASE = 'http://localhost:3000';
         let accessToken = '';
         let refreshTokenValue = localStorage.getItem('refreshToken') || '';
@@ -317,6 +318,7 @@
                 accessToken = at;
                 refreshTokenValue = rt;
                 localStorage.setItem('refreshToken', refreshTokenValue);
+                localStorage.removeItem('accessToken');
                 history.replaceState(null, '', window.location.pathname + window.location.search);
             }
         }
@@ -449,6 +451,7 @@
                     accessToken = u.accessToken || u.access_token || data.accessToken || data.access_token || '';
                     refreshTokenValue = u.refreshToken || u.refresh_token || data.refreshToken || data.refresh_token || '';
                     if (refreshTokenValue) localStorage.setItem('refreshToken', refreshTokenValue);
+                    localStorage.removeItem('accessToken');
                     document.getElementById('tfaLoginSection').style.display = 'none';
                     pending2FAToken = '';
 
@@ -476,6 +479,7 @@
                 accessToken = '';
                 refreshTokenValue = '';
                 localStorage.removeItem('refreshToken');
+                localStorage.removeItem('accessToken');
                 resultDiv.className = 'result success';
                 resultDiv.textContent = 'Logged out (no refresh token was stored).';
                 updateTokenDisplay();
@@ -493,6 +497,7 @@
                 accessToken = '';
                 refreshTokenValue = '';
                 localStorage.removeItem('refreshToken');
+                localStorage.removeItem('accessToken');
 
                 if (response.ok) {
                     resultDiv.className = 'result success';
@@ -506,6 +511,7 @@
                 accessToken = '';
                 refreshTokenValue = '';
                 localStorage.removeItem('refreshToken');
+                localStorage.removeItem('accessToken');
                 resultDiv.className = 'result success';
                 resultDiv.textContent = 'Logged out locally (request failed). Tokens cleared.';
                 updateTokenDisplay();
@@ -561,6 +567,7 @@
                     accessToken = data.accessToken || data.access_token || '';
                     refreshTokenValue = data.refreshToken || data.refresh_token || '';
                     if (refreshTokenValue) localStorage.setItem('refreshToken', refreshTokenValue);
+                    localStorage.removeItem('accessToken');
 
                     resultDiv.className = 'result success';
                     resultDiv.textContent = JSON.stringify(data, null, 2);
@@ -781,6 +788,7 @@
                     accessToken = u.accessToken || '';
                     refreshTokenValue = u.refreshToken || '';
                     if (refreshTokenValue) localStorage.setItem('refreshToken', refreshTokenValue);
+                    localStorage.removeItem('accessToken');
                     pending2FAToken = '';
                     document.getElementById('tfaLoginSection').style.display = 'none';
                     resultDiv.className = 'result success';
@@ -912,6 +920,7 @@
                         accessToken = d.accessToken || d.access_token || '';
                         refreshTokenValue = d.refreshToken || d.refresh_token || '';
                         if (refreshTokenValue) localStorage.setItem('refreshToken', refreshTokenValue);
+                        localStorage.removeItem('accessToken');
                     }
                 } catch (_) {}
             }

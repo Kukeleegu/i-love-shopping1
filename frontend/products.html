@@ -362,7 +362,8 @@
 
     <script>
         // --- Products UI: API base, auth state, product list; helpers then load/filter/CRUD/init ---
-        // Access token: memory only (never localStorage). Refresh token in localStorage for refresh-on-reload.
+        // Access token: memory only (never in localStorage). Refresh token in localStorage for refresh-on-reload.
+        localStorage.removeItem('accessToken'); // Ensure access token is never persisted (security).
         const API_BASE = ''; // same origin (page is served by backend, so /api/... works)
         let accessToken = '';
         let currentUserId = '';
@@ -945,6 +946,7 @@
             const rt = params.get('refreshToken');
             if (at) accessToken = at;
             if (rt) { refreshTokenValue = rt; localStorage.setItem('refreshToken', rt); }
+            localStorage.removeItem('accessToken');
         }
 
         // initial load: apply hash, then if we have refresh but no access token, refresh to get access token in memory
@@ -962,6 +964,7 @@
                         accessToken = d.accessToken || d.access_token || '';
                         refreshTokenValue = d.refreshToken || d.refresh_token || '';
                         if (refreshTokenValue) localStorage.setItem('refreshToken', refreshTokenValue);
+                        localStorage.removeItem('accessToken');
                     }
                 } catch (_) {}
             }
