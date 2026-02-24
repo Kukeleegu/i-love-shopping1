@@ -1,0 +1,135 @@
+// Prisma schema: User (auth, 2FA, refresh tokens, password reset), Product (with categories), Category, RefreshToken, PasswordResetToken.
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User{
+  id String @id @default(uuid())
+  username String
+  email String @unique
+  password String @map("password_hash")
+  refreshTokens RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+  products Product[]
+  productRatings ProductRating[]
+  tfaEnabled Boolean @default(false)
+  tfaSecret String?
+  tempTfaSecret String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  @@map("users")
+}
+
+model Product{
+  id String @id @default(uuid())
+  name String
+
+  // Description optional (?)
+  description String?
+  price Decimal @db.Decimal(15, 2)
+  stockQuantity Int @default(0)
+  brand String
+  images String[]
+  categories ProductCategory[]
+  createdByUserId String? @map("created_by_user_id")
+  createdByUser User? @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  // Weight - both metric and imperial
+  weightKg Decimal? @db.Decimal(10, 3)
+  weightLbs Decimal? @db.Decimal(10, 3)
+  
+  // Dimensions - Metric
+  lengthCm Decimal? @db.Decimal(10, 2) @map("length_cm")
+  widthCm Decimal? @db.Decimal(10, 2) @map("width_cm")
+  heightCm Decimal? @db.Decimal(10, 2) @map("height_cm")
+  
+  // Dimensions - Imperial
+  lengthIn Decimal? @db.Decimal(10, 2) @map("length_in")
+  widthIn Decimal? @db.Decimal(10, 2) @map("width_in")
+  heightIn Decimal? @db.Decimal(10, 2) @map("height_in")
+  
+  averageRating Decimal? @db.Decimal(3, 2) @map("average_rating")
+  ratingCount Int @default(0) @map("rating_count")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  ratings ProductRating[]
+
+  @@map("products")
+  @@index([name])
+  @@index([brand])
+  @@index([price])
+  @@index([createdByUserId])
+  @@index([averageRating])
+}
+
+model ProductRating {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  productId String   @map("product_id")
+  score     Int      // 1-5
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("product_ratings")
+  @@index([productId])
+}
+
+model Category{
+  id String @id @default(uuid())
+  name String
+  products ProductCategory[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("categories")
+}
+
+model ProductCategory {
+  id String @id @default(uuid())
+  productId String
+  categoryId String
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([productId, categoryId])
+  @@map("product_categories")
+  @@index([categoryId])  // for filtering products by category
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  isRevoked Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  isUsed    Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("password_reset_tokens")
+}

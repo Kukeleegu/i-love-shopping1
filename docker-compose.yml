@@ -1,0 +1,48 @@
+# From repo root: cd dot-com-retail && docker compose up -d
+# First-time / reviewers: cp backend/.env.example backend/.env (then docker compose up -d)
+# After pulling code that adds/changes API routes or backend: docker compose build backend && docker compose up -d --force-recreate backend
+# Data persistence: DB and uploads live in named volumes. Use "docker compose down" WITHOUT -v to keep data.
+# Using "docker compose down -v" DELETES volumes and clears all data.
+
+services:
+  db:
+    image: postgres:15
+    container_name: postgres-dev
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: yourpassword
+      POSTGRES_DB: ecommerce
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: dotcom-backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app/frontend:ro
+      - uploads_data:/app/backend/uploads
+    env_file: backend/.env
+    # Only override what must be different in Docker; rest come from backend/.env (don't re-list vars here or they get interpolated from root .env and overwrite env_file with empty)
+    environment:
+      DATABASE_URL: "postgresql://postgres:yourpassword@db:5432/ecommerce"
+      PORT: "3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+    name: dotcom_retail_postgres_data
+  uploads_data:
+    name: dotcom_retail_uploads_data

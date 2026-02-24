@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<!-- Products page: browse/filter products, create/edit/delete (auth required). Tokens from hash (#accessToken=...). -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products – dot-com retail</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+        }
+        .card {
+            background: #111827;
+            color: #f9fafb;
+            border-radius: 10px;
+            padding: 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .card-img-wrap {
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #1f2937;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        .card-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .card-img-wrap .card-img-placeholder {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .card-carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        .card-carousel-btn:hover {
+            background: rgba(0,0,0,0.7);
+        }
+        .card-carousel-btn.prev { left: 8px; }
+        .card-carousel-btn.next { right: 8px; }
+        .card-carousel-dots {
+            position: absolute;
+            bottom: 8px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            z-index: 2;
+        }
+        .card-carousel-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,0.5);
+            cursor: pointer;
+            padding: 0;
+        }
+        .card-carousel-dot.active {
+            background: white;
+        }
+        .card-body {
+            padding: 16px;
+        }
+        .card h2 {
+            margin: 0 0 8px;
+            font-size: 18px;
+        }
+        .price {
+            font-weight: 700;
+            color: #f97316;
+            margin-bottom: 8px;
+        }
+        .meta {
+            font-size: 13px;
+            color: #9ca3af;
+            margin-bottom: 6px;
+        }
+        .error, .info {
+            margin-top: 12px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            white-space: pre-wrap;
+        }
+        .error {
+            background: #fee2e2;
+            border: 1px solid #f87171;
+            color: #b91c1c;
+        }
+        .info {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            color: #111827;
+        }
+        .card-actions {
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+        }
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+        .product-ratings-section {
+            margin: 10px 0;
+            padding: 8px 0;
+            border-top: 1px solid #374151;
+        }
+        .rating-display {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+        .rating-row {
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .rating-label {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+        .star-btn {
+            min-width: 28px;
+        }
+        .star-btn.active {
+            background: #fbbf24;
+            color: #111827;
+        }
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+        #editProductSection {
+            display: none;
+            margin-bottom: 12px;
+        }
+        .filter-bar {
+            background: rgba(255,255,255,0.15);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: flex-end;
+        }
+        .filter-bar label { font-size: 12px; color: #e5e7eb; }
+        .filter-bar input, .filter-bar select {
+            padding: 6px 8px;
+            border-radius: 4px;
+            border: 1px solid #374151;
+        }
+        .filter-bar .filter-btn { margin-left: 4px; }
+        .suggest-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 10;
+            min-width: 160px;
+        }
+        .suggest-list li { padding: 8px 12px; cursor: pointer; font-size: 13px; }
+        .suggest-list li:hover { background: #374151; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="top-bar">
+            <button class="btn" onclick="goBack()">← Back to API Tester</button>
+            <div>
+                <button class="btn" onclick="toggleAddForm()">Add Product</button>
+                <button class="btn" onclick="reloadProducts()">Reload products</button>
+            </div>
+        </div>
+        <h1>🚗 Product Catalog</h1>
+
+        <div class="filter-bar">
+            <div style="position:relative;">
+                <label>Search</label>
+                <input type="text" id="filterQ" placeholder="Name, brand, or description" style="width:160px;" autocomplete="off" oninput="onSearchInput()" onblur="hideSuggestList()">
+                <ul id="suggestList" class="suggest-list" style="display:none;"></ul>
+            </div>
+            <div>
+                <label>Brand</label>
+                <select id="filterBrand"><option value="">All</option></select>
+            </div>
+            <div>
+                <label>Category</label>
+                <select id="filterCategory"><option value="">All</option></select>
+            </div>
+            <div>
+                <label>Min price</label>
+                <input type="number" id="filterMinPrice" placeholder="Min" min="0" step="0.01" style="width:80px;">
+            </div>
+            <div>
+                <label>Max price</label>
+                <input type="number" id="filterMaxPrice" placeholder="Max" min="0" step="0.01" style="width:80px;">
+            </div>
+            <div>
+                <label>Sort</label>
+                <select id="filterSort">
+                    <option value="">Newest</option>
+                    <option value="price_asc">Price ↑</option>
+                    <option value="price_desc">Price ↓</option>
+                    <option value="rating_desc">Rating ↑</option>
+                    <option value="rating_asc">Rating ↓</option>
+                    <option value="name_asc">Name A-Z</option>
+                    <option value="name_desc">Name Z-A</option>
+                    <option value="relevance">Relevance</option>
+                </select>
+            </div>
+            <button type="button" class="btn filter-btn" onclick="applyFilters()">Apply</button>
+        </div>
+
+        <div id="addProductSection" class="info" style="display:none; margin-bottom: 12px;">
+            <h3 style="margin-top:0;">Add Product (requires login)</h3>
+            <div>
+                <input id="addName" placeholder="Name" style="margin:2px; padding:6px; width:180px;">
+                <input id="addPrice" placeholder="Price (e.g. 199999.99)" style="margin:2px; padding:6px; width:200px;">
+                <input id="addBrand" placeholder="Brand" style="margin:2px; padding:6px; width:160px;">
+                <input id="addCategory" placeholder="Category name" style="margin:2px; padding:6px; width:160px;">
+            </div>
+            <div>
+                <input id="addStock" placeholder="Stock quantity" style="margin:2px; padding:6px; width:140px;">
+            </div>
+            <div>
+                <label style="font-size:13px;">Image file(s):</label>
+                <input type="file" id="addImageFiles" accept="image/jpeg,image/png,image/gif,image/webp" multiple style="margin:2px;">
+            </div>
+            <div>
+                <input id="addWeightKg" placeholder="Weight kg (optional)" style="margin:2px; padding:6px; width:160px;">
+                <input id="addWeightLbs" placeholder="Weight lbs (optional)" style="margin:2px; padding:6px; width:160px;">
+            </div>
+            <div>
+                <input id="addLengthCm" placeholder="Length cm (optional)" style="margin:2px; padding:6px; width:140px;">
+                <input id="addWidthCm" placeholder="Width cm (optional)" style="margin:2px; padding:6px; width:140px;">
+                <input id="addHeightCm" placeholder="Height cm (optional)" style="margin:2px; padding:6px; width:140px;">
+            </div>
+            <div>
+                <input id="addLengthIn" placeholder="Length in (optional)" style="margin:2px; padding:6px; width:140px;">
+                <input id="addWidthIn" placeholder="Width in (optional)" style="margin:2px; padding:6px; width:140px;">
+                <input id="addHeightIn" placeholder="Height in (optional)" style="margin:2px; padding:6px; width:140px;">
+            </div>
+            <div>
+                <button class="btn" onclick="submitNewProduct()">Save Product</button>
+            </div>
+        </div>
+        <div id="editProductSection" class="info">
+            <h3 style="margin-top:0;">Edit Product</h3>
+            <input type="hidden" id="editId" />
+            <div>
+                <input id="editName" placeholder="Name" style="margin:2px; padding:6px; width:180px;">
+                <input id="editPrice" placeholder="Price" style="margin:2px; padding:6px; width:200px;">
+                <input id="editBrand" placeholder="Brand" style="margin:2px; padding:6px; width:160px;">
+                <input id="editCategory" placeholder="Category name" style="margin:2px; padding:6px; width:160px;">
+            </div>
+            <div>
+                <input id="editDescription" placeholder="Description (optional)" style="margin:2px; padding:6px; width:100%; max-width:600px;">
+            </div>
+            <div>
+                <input id="editStock" placeholder="Stock quantity" style="margin:2px; padding:6px; width:140px;">
+            </div>
+            <div>
+                <label style="font-size:13px;">Image file(s) (replace existing):</label>
+                <input type="file" id="editImageFiles" accept="image/jpeg,image/png,image/gif,image/webp" multiple style="margin:2px;">
+            </div>
+            <div>
+                <input id="editWeightKg" placeholder="Weight kg (optional)" style="margin:2px; padding:6px; width:160px;">
+                <input id="editWeightLbs" placeholder="Weight lbs (optional)" style="margin:2px; padding:6px; width:160px;">
+            </div>
+            <div>
+                <input id="editLengthCm" placeholder="Length cm" style="margin:2px; padding:6px; width:140px;">
+                <input id="editWidthCm" placeholder="Width cm" style="margin:2px; padding:6px; width:140px;">
+                <input id="editHeightCm" placeholder="Height cm" style="margin:2px; padding:6px; width:140px;">
+            </div>
+            <div>
+                <input id="editLengthIn" placeholder="Length in" style="margin:2px; padding:6px; width:140px;">
+                <input id="editWidthIn" placeholder="Width in" style="margin:2px; padding:6px; width:140px;">
+                <input id="editHeightIn" placeholder="Height in" style="margin:2px; padding:6px; width:140px;">
+            </div>
+            <div>
+                <button class="btn" onclick="submitEditProduct()">Save changes</button>
+                <button class="btn" onclick="cancelEdit()">Cancel</button>
+            </div>
+        </div>
+        <div id="productsInfo" class="info" style="display:none;"></div>
+        <div id="productsError" class="error" style="display:none;"></div>
+        <div id="productsGrid" class="card-grid"></div>
+    </div>
+
+    <script>
+        // --- Products UI: API base, auth state, product list; helpers then load/filter/CRUD/init ---
+        // Access token: memory only (never localStorage). Refresh token in localStorage for refresh-on-reload.
+        const API_BASE = ''; // same origin (page is served by backend, so /api/... works)
+        let accessToken = '';
+        let currentUserId = '';
+        let productsList = [];
+
+        function escapeAttr(s) {
+            if (s == null) return '';
+            const t = String(s);
+            return t.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+        function escapeHtml(s) {
+            if (s == null) return '';
+            const t = String(s);
+            return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function cardCarousel(btn, delta) {
+            const wrap = btn.closest('.card-img-wrap');
+            if (!wrap) return;
+            const urlsJson = wrap.getAttribute('data-urls');
+            if (!urlsJson) return;
+            let urls;
+            try { urls = JSON.parse(urlsJson); } catch (_) { return; }
+            if (!urls.length) return;
+            let idx = parseInt(wrap.getAttribute('data-index') || '0', 10);
+            idx = (idx + delta + urls.length) % urls.length;
+            wrap.setAttribute('data-index', String(idx));
+            const img = wrap.querySelector('img');
+            if (img) img.src = urls[idx];
+            wrap.querySelectorAll('.card-carousel-dot').forEach((dot, i) => {
+                dot.classList.toggle('active', i === idx);
+            });
+        }
+
+        function cardCarouselTo(dotBtn) {
+            const wrap = dotBtn.closest('.card-img-wrap');
+            if (!wrap) return;
+            const idx = parseInt(dotBtn.getAttribute('data-index') || '0', 10);
+            const urlsJson = wrap.getAttribute('data-urls');
+            if (!urlsJson) return;
+            let urls;
+            try { urls = JSON.parse(urlsJson); } catch (_) { return; }
+            if (idx < 0 || idx >= urls.length) return;
+            wrap.setAttribute('data-index', String(idx));
+            const img = wrap.querySelector('img');
+            if (img) img.src = urls[idx];
+            wrap.querySelectorAll('.card-carousel-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+        }
+
+        function goBack() {
+            window.location.href = '/test.html';
+        }
+
+        async function fetchMe() {
+            if (!accessToken) return;
+            try {
+                const res = await fetch(`${API_BASE}/api/users/me`, {
+                    headers: { 'Authorization': `Bearer ${accessToken}` },
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    currentUserId = data.userId || '';
+                }
+            } catch (_) {}
+        }
+
+        function toggleAddForm() {
+            const section = document.getElementById('addProductSection');
+            if (section.style.display === 'none' || !section.style.display) {
+                section.style.display = 'block';
+            } else {
+                section.style.display = 'none';
+            }
+        }
+
+        async function loadProducts() {
+            const info = document.getElementById('productsInfo');
+            const error = document.getElementById('productsError');
+            const grid = document.getElementById('productsGrid');
+
+            info.style.display = 'block';
+            info.textContent = 'Loading products...';
+            error.style.display = 'none';
+            grid.innerHTML = '';
+
+            try {
+                const params = new URLSearchParams();
+                const q = (document.getElementById('filterQ')?.value || '').trim();
+                const brand = (document.getElementById('filterBrand')?.value || '').trim();
+                const category = (document.getElementById('filterCategory')?.value || '').trim();
+                const minPrice = (document.getElementById('filterMinPrice')?.value || '').trim();
+                const maxPrice = (document.getElementById('filterMaxPrice')?.value || '').trim();
+                const sort = (document.getElementById('filterSort')?.value || '').trim();
+                if (q) params.set('q', q);
+                if (brand) params.set('brand', brand);
+                if (category) params.set('category', category);
+                if (minPrice) params.set('minPrice', minPrice);
+                if (maxPrice) params.set('maxPrice', maxPrice);
+                if (sort) params.set('sort', sort);
+                const query = params.toString();
+                const url = query ? `${API_BASE}/api/products?${query}` : `${API_BASE}/api/products`;
+                const headers = {};
+                if (accessToken) headers['Authorization'] = 'Bearer ' + accessToken;
+                const res = await fetch(url, { headers });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    error.style.display = 'block';
+                    error.textContent = data.error || 'Failed to load products';
+                    info.style.display = 'none';
+                    return;
+                }
+
+                const products = data.products || data;
+                productsList = Array.isArray(products) ? products : [];
+                if (productsList.length === 0) {
+                    info.textContent = 'No products found.';
+                    return;
+                }
+
+                info.textContent = `Showing ${productsList.length} product(s).`;
+                const canEdit = (p) => currentUserId && p.createdByUserId === currentUserId;
+                productsList.forEach(p => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+
+                    const categories = (p.categories || []).map(c => c.name).join(', ');
+                    const images = (p.images && Array.isArray(p.images)) ? p.images : [];
+                    const mainImage = images.length > 0 ? images[0] : null;
+
+                    const priceText = formatPrice(p.price);
+                    const avg = p.averageRating != null ? Number(p.averageRating) : null;
+                    const count = p.ratingCount || 0;
+                    const ratingText = avg != null && count > 0
+                        ? `★ ${avg.toFixed(1)} (${count} rating${count === 1 ? '' : 's'})`
+                        : 'No ratings yet';
+                    const myRating = p.myRating != null ? p.myRating : null;
+                    const isLoggedIn = !!accessToken;
+                    let rateHtml = '';
+                    if (isLoggedIn) {
+                        const starBtns = [1,2,3,4,5].map(s => `<button type="button" class="btn btn-sm star-btn ${myRating === s ? 'active' : ''}" onclick="rateProduct('${p.id}', ${s})" title="Rate ${s}">${s}</button>`).join('');
+                        rateHtml = `<div class="rating-row"><span class="rating-label">Your rating:</span> ${starBtns} <button type="button" class="btn btn-sm" onclick="removeRating('${p.id}')">Remove</button></div>`;
+                    } else {
+                        rateHtml = '<div class="rating-row"><span class="meta">Log in on the API Tester to rate this product.</span></div>';
+                    }
+                    const weightParts = [];
+                    if (p.weightKg) weightParts.push(`${p.weightKg} kg`);
+                    if (p.weightLbs) weightParts.push(`${p.weightLbs} lbs`);
+                    const weightText = weightParts.join(' / ');
+
+                    const sizeMetric = (p.lengthCm || p.widthCm || p.heightCm)
+                        ? `${p.lengthCm || '-'} × ${p.widthCm || '-'} × ${p.heightCm || '-'} cm`
+                        : '';
+                    const sizeImperial = (p.lengthIn || p.widthIn || p.heightIn)
+                        ? `${p.lengthIn || '-'} × ${p.widthIn || '-'} × ${p.heightIn || '-'} in`
+                        : '';
+
+                    const actionsHtml = canEdit(p)
+                        ? `<div class="card-actions">
+                            <button class="btn btn-sm" onclick="openEdit('${p.id}')">Edit</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteProduct('${p.id}')">Delete</button>
+                           </div>`
+                        : '';
+
+                    const multi = images.length > 1;
+                    const wrapData = multi ? ` data-urls="${escapeAttr(JSON.stringify(images))}" data-index="0"` : '';
+                    let imgHtml;
+                    if (mainImage) {
+                        const imgSrc = mainImage.startsWith('http') ? mainImage : (API_BASE + (mainImage.startsWith('/') ? '' : '/') + mainImage);
+                        imgHtml = `<img src="${escapeAttr(imgSrc)}" alt="${escapeAttr(p.name)}" loading="lazy" onerror="this.onerror=null;this.style.display='none';var pl=this.parentElement.querySelector('.card-img-placeholder');if(pl)pl.style.display='flex';" /><span class="card-img-placeholder" style="display:none;">No image</span>`;
+                        if (multi) {
+                            const dots = images.map((_, i) => `<button type="button" class="card-carousel-dot${i === 0 ? ' active' : ''}" data-index="${i}" aria-label="Image ${i + 1}" onclick="cardCarouselTo(this)"></button>`).join('');
+                            imgHtml += `<button type="button" class="card-carousel-btn prev" aria-label="Previous image" onclick="cardCarousel(this, -1)">‹</button><button type="button" class="card-carousel-btn next" aria-label="Next image" onclick="cardCarousel(this, 1)">›</button><div class="card-carousel-dots">${dots}</div>`;
+                        }
+                    } else {
+                        imgHtml = '<span class="card-img-placeholder">No image</span>';
+                    }
+
+                    card.innerHTML = `
+                        <div class="card-img-wrap"${wrapData}>${imgHtml}</div>
+                        <div class="card-body">
+                            <h2>${escapeHtml(p.name)}</h2>
+                            <div class="price">${priceText}</div>
+                            <div class="product-ratings-section">
+                                <div class="meta rating-display">${ratingText}</div>
+                                ${rateHtml}
+                            </div>
+                            <div class="meta">${escapeHtml(p.brand || '')}${categories ? ' · ' + escapeHtml(categories) : ''}</div>
+                            <div class="meta">Stock: ${p.stockQuantity}</div>
+                            ${p.description ? `<p>${escapeHtml(p.description)}</p>` : ''}
+                            ${weightText ? `<div class="meta">Weight: ${weightText}</div>` : ''}
+                            ${sizeMetric ? `<div class="meta">Size: ${sizeMetric}</div>` : ''}
+                            ${sizeImperial ? `<div class="meta">Size: ${sizeImperial}</div>` : ''}
+                            ${actionsHtml}
+                        </div>
+                    `;
+
+                    grid.appendChild(card);
+                });
+            } catch (e) {
+                error.style.display = 'block';
+                error.textContent = 'Error loading products: ' + e.message;
+                info.style.display = 'none';
+            }
+        }
+
+        function reloadProducts() {
+            loadProducts();
+        }
+
+        function applyFilters() {
+            loadProducts();
+        }
+
+        let suggestTimer = null;
+        function hideSuggestList() {
+            setTimeout(function() {
+                var l = document.getElementById('suggestList');
+                if (l) l.style.display = 'none';
+            }, 150);
+        }
+        function onSearchInput() {
+            clearTimeout(suggestTimer);
+            const q = (document.getElementById('filterQ')?.value || '').trim();
+            const list = document.getElementById('suggestList');
+            if (!list) return;
+            if (q.length < 2) { list.style.display = 'none'; return; }
+            suggestTimer = setTimeout(async () => {
+                try {
+                    const res = await fetch(`${API_BASE}/api/products/suggest?q=${encodeURIComponent(q)}`);
+                    const data = await res.json();
+                    const suggestions = (data.suggestions || []).slice(0, 8);
+                    list.innerHTML = suggestions.length
+                        ? suggestions.map(s => `<li data-name="${escapeAttr(s.name)}">${escapeHtml(s.name)}</li>`).join('')
+                        : '<li class="no-suggest">No matches</li>';
+                    list.style.display = suggestions.length ? 'block' : 'none';
+                    list.querySelectorAll('li[data-name]').forEach(li => {
+                        li.addEventListener('click', () => {
+                            const name = li.getAttribute('data-name');
+                            const input = document.getElementById('filterQ');
+                            if (input) input.value = name || '';
+                            list.style.display = 'none';
+                        });
+                    });
+                } catch (_) { list.style.display = 'none'; }
+            }, 200);
+        }
+
+        async function fetchFacets() {
+            try {
+                const res = await fetch(`${API_BASE}/api/products/facets`);
+                const data = await res.json();
+                if (!res.ok) return;
+                const brandSelect = document.getElementById('filterBrand');
+                const catSelect = document.getElementById('filterCategory');
+                if (brandSelect && data.brands) {
+                    const current = brandSelect.value;
+                    brandSelect.innerHTML = '<option value="">All</option>' + data.brands.map(b => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join('');
+                    if (data.brands.includes(current)) brandSelect.value = current;
+                }
+                if (catSelect && data.categories) {
+                    const current = catSelect.value;
+                    catSelect.innerHTML = '<option value="">All</option>' + data.categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+                    if (data.categories.includes(current)) catSelect.value = current;
+                }
+            } catch (_) {}
+        }
+
+        async function uploadImageFiles(fileInputId) {
+            const input = document.getElementById(fileInputId);
+            if (!input || !input.files || input.files.length === 0) return [];
+            const form = new FormData();
+            for (let i = 0; i < input.files.length; i++) {
+                form.append('images', input.files[i]);
+            }
+            const res = await fetch(`${API_BASE}/api/upload`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+                body: form,
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Upload failed');
+            return data.urls || [];
+        }
+
+        async function submitNewProduct() {
+            const info = document.getElementById('productsInfo');
+            const error = document.getElementById('productsError');
+
+            const name = (document.getElementById('addName').value || '').trim();
+            const priceStr = (document.getElementById('addPrice').value || '').trim();
+            const brand = (document.getElementById('addBrand').value || '').trim();
+            const categoryName = (document.getElementById('addCategory').value || '').trim();
+            const stockStr = (document.getElementById('addStock').value || '').trim();
+            const weightKg = (document.getElementById('addWeightKg').value || '').trim();
+            const weightLbs = (document.getElementById('addWeightLbs').value || '').trim();
+            const lengthCm = (document.getElementById('addLengthCm').value || '').trim();
+            const widthCm  = (document.getElementById('addWidthCm').value  || '').trim();
+            const heightCm = (document.getElementById('addHeightCm').value || '').trim();
+            const lengthIn = (document.getElementById('addLengthIn').value || '').trim();
+            const widthIn  = (document.getElementById('addWidthIn').value  || '').trim();
+            const heightIn = (document.getElementById('addHeightIn').value || '').trim();
+
+            if (!accessToken) {
+                error.style.display = 'block';
+                error.textContent = 'You must be logged in to add products (login on test.html first).';
+                return;
+            }
+            if (!name || !priceStr || !brand || !categoryName) {
+                error.style.display = 'block';
+                error.textContent = 'Name, price, brand, and category are required.';
+                return;
+            }
+
+            const price = priceStr;
+            const stockQuantity = stockStr ? parseInt(stockStr, 10) : 0;
+
+            try {
+                let imageUrls = [];
+                try {
+                    imageUrls = await uploadImageFiles('addImageFiles');
+                } catch (e) {
+                    error.style.display = 'block';
+                    error.textContent = 'Image upload failed: ' + e.message;
+                    return;
+                }
+                const images = imageUrls;
+
+                const res = await fetch(`${API_BASE}/api/products`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify({
+                        name,
+                        price,
+                        brand,
+                        description: '',
+                        stockQuantity,
+                        categoryName,
+                        images,
+                        weightKg,
+                        weightLbs,
+                        lengthCm,
+                        widthCm,
+                        heightCm,
+                        lengthIn,
+                        widthIn,
+                        heightIn,
+                    }),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    error.style.display = 'block';
+                    error.textContent = (data.error || 'Failed to add product') + (data.details ? '\n' + data.details : '');
+                    return;
+                }
+                error.style.display = 'none';
+                info.style.display = 'block';
+                info.textContent = 'Product added successfully.';
+                // Clear inputs
+                ['addName','addPrice','addBrand','addCategory','addStock',
+                 'addWeightKg','addWeightLbs','addLengthCm','addWidthCm','addHeightCm',
+                 'addLengthIn','addWidthIn','addHeightIn'
+                ].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
+                const addFiles = document.getElementById('addImageFiles');
+                if (addFiles) addFiles.value = '';
+                await fetchFacets();
+                await loadProducts();
+            } catch (e) {
+                error.style.display = 'block';
+                error.textContent = 'Error adding product: ' + e.message;
+            }
+        }
+
+        function formatPrice(raw) {
+            const n = Number(raw);
+            if (Number.isNaN(n)) return raw || '';
+            // e.g. 849 000 € (French-style group separator)
+            return n.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' €';
+        }
+
+        function openEdit(id) {
+            const p = productsList.find(x => x.id === id);
+            if (!p) return;
+            document.getElementById('editId').value = p.id;
+            document.getElementById('editName').value = p.name || '';
+            document.getElementById('editPrice').value = p.price != null ? String(p.price) : '';
+            document.getElementById('editBrand').value = p.brand || '';
+            document.getElementById('editCategory').value = (p.categories && p.categories[0]) ? p.categories[0].name : '';
+            document.getElementById('editDescription').value = p.description != null ? String(p.description) : '';
+            document.getElementById('editStock').value = p.stockQuantity != null ? String(p.stockQuantity) : '';
+            const editFiles = document.getElementById('editImageFiles');
+            if (editFiles) editFiles.value = '';
+            document.getElementById('editWeightKg').value = p.weightKg != null ? String(p.weightKg) : '';
+            document.getElementById('editWeightLbs').value = p.weightLbs != null ? String(p.weightLbs) : '';
+            document.getElementById('editLengthCm').value = p.lengthCm != null ? String(p.lengthCm) : '';
+            document.getElementById('editWidthCm').value = p.widthCm != null ? String(p.widthCm) : '';
+            document.getElementById('editHeightCm').value = p.heightCm != null ? String(p.heightCm) : '';
+            document.getElementById('editLengthIn').value = p.lengthIn != null ? String(p.lengthIn) : '';
+            document.getElementById('editWidthIn').value = p.widthIn != null ? String(p.widthIn) : '';
+            document.getElementById('editHeightIn').value = p.heightIn != null ? String(p.heightIn) : '';
+            document.getElementById('editProductSection').style.display = 'block';
+        }
+
+        function cancelEdit() {
+            document.getElementById('editProductSection').style.display = 'none';
+        }
+
+        async function submitEditProduct() {
+            const error = document.getElementById('productsError');
+            const id = document.getElementById('editId').value;
+            if (!id) return;
+            if (!accessToken) {
+                error.style.display = 'block';
+                error.textContent = 'You must be logged in to edit.';
+                return;
+            }
+            const name = (document.getElementById('editName').value || '').trim();
+            const priceStr = (document.getElementById('editPrice').value || '').trim();
+            const brand = (document.getElementById('editBrand').value || '').trim();
+            const categoryName = (document.getElementById('editCategory').value || '').trim();
+            const description = (document.getElementById('editDescription').value || '').trim();
+            const stockStr = (document.getElementById('editStock').value || '').trim();
+            const stockQuantity = stockStr ? parseInt(stockStr, 10) : 0;
+            if (!name || !priceStr || !brand || !categoryName) {
+                error.style.display = 'block';
+                error.textContent = 'Name, price, brand, and category are required.';
+                return;
+            }
+            try {
+                let uploadedUrls = [];
+                try {
+                    uploadedUrls = await uploadImageFiles('editImageFiles');
+                } catch (e) {
+                    error.style.display = 'block';
+                    error.textContent = 'Image upload failed: ' + e.message;
+                    return;
+                }
+                const p = productsList.find(x => x.id === id);
+                const existingImages = (p && p.images) ? p.images : [];
+                const images = uploadedUrls.length ? uploadedUrls : existingImages;
+
+                const res = await fetch(`${API_BASE}/api/products/${id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify({
+                        name,
+                        price: priceStr,
+                        brand,
+                        description: description || undefined,
+                        categoryName,
+                        stockQuantity,
+                        images,
+                        weightKg: (document.getElementById('editWeightKg').value || '').trim() || undefined,
+                        weightLbs: (document.getElementById('editWeightLbs').value || '').trim() || undefined,
+                        lengthCm: (document.getElementById('editLengthCm').value || '').trim() || undefined,
+                        widthCm: (document.getElementById('editWidthCm').value || '').trim() || undefined,
+                        heightCm: (document.getElementById('editHeightCm').value || '').trim() || undefined,
+                        lengthIn: (document.getElementById('editLengthIn').value || '').trim() || undefined,
+                        widthIn: (document.getElementById('editWidthIn').value || '').trim() || undefined,
+                        heightIn: (document.getElementById('editHeightIn').value || '').trim() || undefined,
+                    }),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    error.style.display = 'block';
+                    error.textContent = data.error || 'Failed to update product';
+                    return;
+                }
+                error.style.display = 'none';
+                const editFiles = document.getElementById('editImageFiles');
+                if (editFiles) editFiles.value = '';
+                cancelEdit();
+                await loadProducts();
+            } catch (e) {
+                error.style.display = 'block';
+                error.textContent = 'Error updating product: ' + e.message;
+            }
+        }
+
+        async function deleteProduct(id) {
+            const p = productsList.find(x => x.id === id);
+            const name = p ? p.name : id;
+            if (!confirm(`Delete product "${name}"? This cannot be undone.`)) return;
+            if (!accessToken) {
+                document.getElementById('productsError').style.display = 'block';
+                document.getElementById('productsError').textContent = 'You must be logged in to delete.';
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE}/api/products/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${accessToken}` },
+                });
+                if (res.status === 204 || res.ok) {
+                    document.getElementById('productsError').style.display = 'none';
+                    await loadProducts();
+                } else {
+                    const data = await res.json();
+                    document.getElementById('productsError').style.display = 'block';
+                    document.getElementById('productsError').textContent = data.error || 'Failed to delete product';
+                }
+            } catch (e) {
+                document.getElementById('productsError').style.display = 'block';
+                document.getElementById('productsError').textContent = 'Error deleting product: ' + e.message;
+            }
+        }
+
+        async function rateProduct(productId, score) {
+            if (!accessToken) return;
+            const errEl = document.getElementById('productsError');
+            try {
+                const res = await fetch(`${API_BASE}/api/products/${productId}/rate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+                    body: JSON.stringify({ score }),
+                });
+                const text = await res.text();
+                let data = {};
+                try { data = text ? JSON.parse(text) : {}; } catch (_) {
+                    errEl.style.display = 'block';
+                    errEl.textContent = res.ok ? 'Invalid response from server' : ('Server error ' + res.status + (text ? ': ' + text.slice(0, 80) : ''));
+                    return;
+                }
+                if (res.ok) {
+                    errEl.style.display = 'none';
+                    await loadProducts();
+                } else {
+                    errEl.style.display = 'block';
+                    errEl.textContent = data.error || 'Failed to rate';
+                }
+            } catch (e) {
+                errEl.style.display = 'block';
+                errEl.textContent = 'Error rating: ' + (e.message || String(e));
+            }
+        }
+
+        async function removeRating(productId) {
+            if (!accessToken) return;
+            const errEl = document.getElementById('productsError');
+            try {
+                const res = await fetch(`${API_BASE}/api/products/${productId}/rate`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${accessToken}` },
+                });
+                const text = await res.text();
+                let data = {};
+                try { data = text ? JSON.parse(text) : {}; } catch (_) {
+                    errEl.style.display = 'block';
+                    errEl.textContent = res.ok ? 'Invalid response from server' : ('Server error ' + res.status + (text ? ': ' + text.slice(0, 80) : ''));
+                    return;
+                }
+                if (res.ok) {
+                    errEl.style.display = 'none';
+                    await loadProducts();
+                } else {
+                    errEl.style.display = 'block';
+                    errEl.textContent = data.error || 'Failed to remove rating';
+                }
+            } catch (e) {
+                errEl.style.display = 'block';
+                errEl.textContent = 'Error removing rating: ' + (e.message || String(e));
+            }
+        }
+
+        let refreshTokenValue = localStorage.getItem('refreshToken') || '';
+        function applyTokensFromHash() {
+            const hash = window.location.hash.slice(1);
+            if (!hash) return;
+            const params = new URLSearchParams(hash);
+            const at = params.get('accessToken');
+            const rt = params.get('refreshToken');
+            if (at) accessToken = at;
+            if (rt) { refreshTokenValue = rt; localStorage.setItem('refreshToken', rt); }
+        }
+
+        // initial load: apply hash, then if we have refresh but no access token, refresh to get access token in memory
+        applyTokensFromHash();
+        (async function init() {
+            if (refreshTokenValue && !accessToken) {
+                try {
+                    const r = await fetch(`${API_BASE}/api/auth/refresh`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ refreshToken: refreshTokenValue }),
+                    });
+                    const d = await r.json();
+                    if (r.ok && d.accessToken) {
+                        accessToken = d.accessToken || d.access_token || '';
+                        refreshTokenValue = d.refreshToken || d.refresh_token || '';
+                        if (refreshTokenValue) localStorage.setItem('refreshToken', refreshTokenValue);
+                    }
+                } catch (_) {}
+            }
+            await fetchMe();
+            await fetchFacets();
+            loadProducts();
+        })();
+    </script>
+</body>
+</html>
+

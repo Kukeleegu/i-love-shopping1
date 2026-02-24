@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<!-- API tester: health, register (reCAPTCHA), login, logout, Google OAuth, refresh, /users/me, products, password reset, 2FA. -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-commerce API Tester</title>
+    <script src="https://www.google.com/recaptcha/api.js?render=6LeKyW0sAAAAAAX5GD8dQa2d1EfTc1Fi79CkKHW9" async defer></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .success {
+            border-color: #4caf50;
+            background: #e8f5e9;
+        }
+
+        .error {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+
+        .token-display {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 12px;
+            word-break: break-all;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background: #4caf50;
+            box-shadow: 0 0 8px #4caf50;
+        }
+
+        .status-offline {
+            background: #f44336;
+            box-shadow: 0 0 8px #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚗 Luxury Car E-commerce API Tester</h1>
+
+        <!-- Server Status -->
+        <div class="section">
+            <h2>
+                <span id="statusIndicator" class="status-indicator status-offline"></span>
+                Server Status
+            </h2>
+            <button onclick="checkHealth()">Check Server Health</button>
+            <div id="healthResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- User Registration -->
+        <div class="section">
+            <h2>👤 User Registration</h2>
+            <form id="registerForm" onsubmit="event.preventDefault(); registerUser();" novalidate>
+                <div class="form-group">
+                    <label for="regEmail">Email:</label>
+                    <input type="email" id="regEmail" placeholder="user@example.com" value="test@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="regPassword">Password:</label>
+                    <input type="password" id="regPassword" placeholder="Enter password" value="password123" required minlength="8">
+                </div>
+                <div class="form-group">
+                    <label for="regUsername">Username:</label>
+                    <input type="text" id="regUsername" placeholder="Username" value="testuser" required minlength="3">
+                </div>
+                <button type="submit">Register User</button>
+            </form>
+            <div id="registerResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- User Login -->
+        <div class="section">
+            <h2>🔐 User Login</h2>
+            <form id="loginForm" onsubmit="event.preventDefault(); loginUser();" novalidate>
+                <div class="form-group">
+                    <label for="loginEmail">Email:</label>
+                    <input type="email" id="loginEmail" placeholder="user@example.com" value="test@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password:</label>
+                    <input type="password" id="loginPassword" placeholder="Enter password" value="password123" required minlength="8">
+                </div>
+                <button type="submit">Login</button>
+            </form>
+            <button onclick="loginWithGoogle()">Sign in with Google</button>
+            <div id="loginResult" class="result" style="display: none;"></div>
+            <div id="tfaLoginSection" style="display: none; margin-top: 12px; padding: 12px; background: #fff8e1; border-radius: 8px;">
+                <p><strong>Two-factor authentication</strong> — Enter the 6-digit code from your app.</p>
+                <input type="text" id="tfaLoginCode" placeholder="000000" maxlength="6" pattern="[0-9]*" style="width: 120px; margin: 8px 0;">
+                <button onclick="submit2FALogin()">Verify and log in</button>
+                <div id="tfaLoginResult" class="result" style="display: none; margin-top: 8px;"></div>
+            </div>
+            <div id="tokenDisplay" class="token-display" style="display: none;"></div>
+            <button onclick="logoutUser()" style="margin-top: 10px;">Logout</button>
+            <div id="logoutResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Two-Factor Authentication (settings) -->
+        <div class="section" id="tfaSettingsSection">
+            <h2>🔒 Two-Factor Authentication</h2>
+            <p id="tfaStatusText" style="margin-bottom: 10px;">Load your profile to see 2FA status.</p>
+            <div id="tfaSetupArea" style="display: none;">
+                <button onclick="start2FASetup()">Enable 2FA</button>
+                <div id="tfaSetupQRArea" style="display: none; margin-top: 12px;">
+                    <p><strong>Scan the QR code</strong> with Google Authenticator or Authy, or enter the secret manually below:</p>
+                    <div id="tfaSetupQRCode" style="margin: 12px 0;"></div>
+                    <p style="margin-top: 8px;">Or use this secret key:</p>
+                    <code id="tfaSetupSecret" style="display: block; margin: 8px 0; word-break: break-all;"></code>
+                    <p id="tfaSetupOtpauthLink" style="margin-top: 6px;"></p>
+                    <p style="margin-top: 8px;">Then enter a code from the app to confirm:</p>
+                    <input type="text" id="tfaSetupCode" placeholder="000000" maxlength="6" style="width: 120px;">
+                    <button onclick="confirm2FASetup()" style="margin-left: 8px;">Confirm and enable</button>
+                </div>
+                <div id="tfaSetupResult" class="result" style="display: none; margin-top: 8px;"></div>
+            </div>
+            <div id="tfaDisableArea" style="display: none;">
+                <p>2FA is enabled. Enter your current code to disable:</p>
+                <input type="text" id="tfaDisableCode" placeholder="000000" maxlength="6" style="width: 120px;">
+                <button onclick="disable2FA()" style="margin-left: 8px;">Disable 2FA</button>
+                <div id="tfaDisableResult" class="result" style="display: none; margin-top: 8px;"></div>
+            </div>
+        </div>
+
+        <!-- Forgot Password -->
+        <div class="section">
+            <h2>📧 Forgot Password</h2>
+            <form id="forgotForm" onsubmit="event.preventDefault(); forgotPassword();" novalidate>
+                <div class="form-group">
+                    <label for="forgotEmail">Email:</label>
+                    <input type="email" id="forgotEmail" placeholder="user@example.com" required>
+                </div>
+                <button type="submit">Send reset link</button>
+            </form>
+            <div id="forgotResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Reset Password (use token from email link or paste below) -->
+        <div class="section">
+            <h2>🔑 Reset Password</h2>
+            <form id="resetForm" onsubmit="event.preventDefault(); resetPassword();" novalidate>
+                <div class="form-group">
+                    <label for="resetToken">Reset token (from email link or URL):</label>
+                    <input type="text" id="resetToken" placeholder="Paste token or open link with ?token=..." required>
+                </div>
+                <div class="form-group">
+                    <label for="resetNewPassword">New password:</label>
+                    <input type="password" id="resetNewPassword" placeholder="New password" required minlength="8">
+                </div>
+                <button type="submit">Reset password</button>
+            </form>
+            <div id="resetResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Token Refresh -->
+        <div class="section">
+            <h2>🔄 Refresh Token</h2>
+            <button onclick="refreshToken()">Refresh Access Token</button>
+            <div id="refreshResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Get Current User -->
+        <div class="section">
+            <h2>👤 Get Current User</h2>
+            <button onclick="getCurrentUser()">Get My Profile</button>
+            <div id="userResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Products -->
+        <div class="section">
+            <h2>🚗 Products</h2>
+            <button onclick="openProductsPage()">Open Products Page</button>
+            <div id="productsResult" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- Tester: API base, tokens; apply hash (OAuth/2FA), then health/register/login/logout/refresh/me/products/password/2FA ---
+        // Access token: memory only (never localStorage). Refresh token: may be in localStorage for refresh-on-reload.
+        const API_BASE = 'http://localhost:3000';
+        let accessToken = '';
+        let refreshTokenValue = localStorage.getItem('refreshToken') || '';
+        let pending2FAToken = '';
+
+        // If we were redirected back from Google OAuth (or 2FA required), read hash.
+        function applyTokensFromHash() {
+            if (!window.location.hash) return;
+            const hash = window.location.hash.substring(1);
+            const params = new URLSearchParams(hash);
+            const requires2FA = params.get('requires2FA');
+            const tempToken = params.get('tempToken');
+            const at = params.get('accessToken');
+            const rt = params.get('refreshToken');
+
+            if (requires2FA && tempToken) {
+                pending2FAToken = tempToken;
+                document.getElementById('tfaLoginSection').style.display = 'block';
+                document.getElementById('tfaLoginCode').value = '';
+                history.replaceState(null, '', window.location.pathname + window.location.search);
+                return;
+            }
+            if (params.get('google') && at && rt) {
+                accessToken = at;
+                refreshTokenValue = rt;
+                localStorage.setItem('refreshToken', refreshTokenValue);
+                history.replaceState(null, '', window.location.pathname + window.location.search);
+            }
+        }
+
+        // Update token display
+        function updateTokenDisplay() {
+            const tokenDisplay = document.getElementById('tokenDisplay');
+            if (accessToken) {
+                tokenDisplay.style.display = 'block';
+                tokenDisplay.textContent = `Access Token: ${accessToken.substring(0, 50)}...`;
+            } else {
+                tokenDisplay.style.display = 'none';
+            }
+        }
+
+        // Check server health
+        async function checkHealth() {
+            const resultDiv = document.getElementById('healthResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Checking...';
+            resultDiv.className = 'result';
+
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                resultDiv.className = 'result success';
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+                
+                document.getElementById('statusIndicator').className = 'status-indicator status-online';
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${error.message}\n\nMake sure your server is running on ${API_BASE}`;
+                document.getElementById('statusIndicator').className = 'status-indicator status-offline';
+            }
+        }
+
+        // reCAPTCHA v3 site key (invisible, score-based)
+        const RECAPTCHA_SITE_KEY = '6LeKyW0sAAAAAAX5GD8dQa2d1EfTc1Fi79CkKHW9';
+
+        // Register user (Step 9: reCAPTCHA v3 — get token via execute(), then send to backend)
+        async function registerUser() {
+            const form = document.getElementById('registerForm');
+            if (form && !form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            const resultDiv = document.getElementById('registerResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Registering...';
+            resultDiv.className = 'result';
+
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const username = document.getElementById('regUsername').value;
+
+            let captchaToken = '';
+            if (typeof grecaptcha !== 'undefined' && grecaptcha.execute) {
+                try {
+                    captchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'register' });
+                } catch (e) {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = 'Could not get reCAPTCHA token.';
+                    return;
+                }
+            }
+            if (!captchaToken) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'reCAPTCHA not available.';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, username, captchaToken }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `Error: ${data.error || 'Registration failed'}\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        // Login user
+        async function loginUser() {
+            const form = document.getElementById('loginForm');
+            if (form && !form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Logging in...';
+            resultDiv.className = 'result';
+
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.requires2FA && data.tempToken) {
+                    pending2FAToken = data.tempToken;
+                    document.getElementById('tfaLoginSection').style.display = 'block';
+                    document.getElementById('tfaLoginCode').value = '';
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = 'Two-factor required. Enter the 6-digit code from your app below.';
+                    updateTokenDisplay();
+                } else if (response.ok) {
+                    const u = data.user || data;
+                    accessToken = u.accessToken || u.access_token || data.accessToken || data.access_token || '';
+                    refreshTokenValue = u.refreshToken || u.refresh_token || data.refreshToken || data.refresh_token || '';
+                    if (refreshTokenValue) localStorage.setItem('refreshToken', refreshTokenValue);
+                    document.getElementById('tfaLoginSection').style.display = 'none';
+                    pending2FAToken = '';
+
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = JSON.stringify(data, null, 2);
+                    updateTokenDisplay();
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `Error: ${data.message || 'Login failed'}\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        // Logout: revoke refresh token, clear local tokens
+        async function logoutUser() {
+            const resultDiv = document.getElementById('logoutResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Logging out...';
+            resultDiv.className = 'result';
+
+            if (!refreshTokenValue) {
+                accessToken = '';
+                refreshTokenValue = '';
+                localStorage.removeItem('refreshToken');
+                resultDiv.className = 'result success';
+                resultDiv.textContent = 'Logged out (no refresh token was stored).';
+                updateTokenDisplay();
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/logout`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ refreshToken: refreshTokenValue }),
+                });
+                const data = await response.json();
+
+                accessToken = '';
+                refreshTokenValue = '';
+                localStorage.removeItem('refreshToken');
+
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = data.message || 'Logged out successfully.';
+                } else {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = (data.error || 'Logged out locally.') + ' Tokens cleared.';
+                }
+                updateTokenDisplay();
+            } catch (error) {
+                accessToken = '';
+                refreshTokenValue = '';
+                localStorage.removeItem('refreshToken');
+                resultDiv.className = 'result success';
+                resultDiv.textContent = 'Logged out locally (request failed). Tokens cleared.';
+                updateTokenDisplay();
+            }
+        }
+
+        // Login with Google (OAuth)
+        async function loginWithGoogle() {
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/oauth/google/url`);
+                const data = await res.json();
+                if (!res.ok || !data.url) {
+                    alert('Failed to start Google login');
+                    return;
+                }
+                window.location.href = data.url;
+            } catch (err) {
+                alert('Error starting Google login: ' + err.message);
+            }
+        }
+
+        // Refresh token
+        let refreshInFlight = false;
+        async function refreshToken() {
+            if (refreshInFlight) {
+                return;
+            }
+            refreshInFlight = true;
+            const resultDiv = document.getElementById('refreshResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Refreshing token...';
+            resultDiv.className = 'result';
+
+            if (!refreshTokenValue) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'No refresh token available. Please login first.';
+                refreshInFlight = false;
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/refresh`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ refreshToken: refreshTokenValue }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    accessToken = data.accessToken || data.access_token || '';
+                    refreshTokenValue = data.refreshToken || data.refresh_token || '';
+                    if (refreshTokenValue) localStorage.setItem('refreshToken', refreshTokenValue);
+
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = JSON.stringify(data, null, 2);
+                    updateTokenDisplay();
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `Error: ${data.message || 'Token refresh failed'}\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${error.message}`;
+            } finally {
+                // Small cooldown to avoid spamming the endpoint and give rotation time to complete
+                setTimeout(() => {
+                    refreshInFlight = false;
+                }, 2000);
+            }
+        }
+
+        // Get current user
+        async function getCurrentUser() {
+            const resultDiv = document.getElementById('userResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Fetching user...';
+            resultDiv.className = 'result';
+
+            if (!accessToken) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'No access token available. Please login first.';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/users/me`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = JSON.stringify(data, null, 2);
+                    update2FAStatus(data.tfaEnabled);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `Error: ${data.message || 'Failed to get user'}\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        // Get products
+        async function getProducts() {
+            const resultDiv = document.getElementById('productsResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Fetching products...';
+            resultDiv.className = 'result';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/products`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `Error: ${data.message || 'Failed to get products'}\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        // Forgot password: request reset link by email
+        async function forgotPassword() {
+            const resultDiv = document.getElementById('forgotResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Sending...';
+            resultDiv.className = 'result';
+
+            const email = document.getElementById('forgotEmail').value?.trim();
+            if (!email) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Please enter your email.';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/forgot-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email }),
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = data.message || JSON.stringify(data, null, 2);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = data.error || JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        // Reset password: submit token + new password (token can come from URL ?token=...)
+        async function resetPassword() {
+            const resultDiv = document.getElementById('resetResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Resetting...';
+            resultDiv.className = 'result';
+
+            let token = document.getElementById('resetToken').value?.trim();
+            if (!token) {
+                const params = new URLSearchParams(window.location.search);
+                token = params.get('token') || '';
+            }
+            const newPassword = document.getElementById('resetNewPassword').value;
+
+            if (!token) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Please enter the reset token or open the link from your email.';
+                return;
+            }
+            if (!newPassword) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Please enter a new password.';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/reset-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token, newPassword }),
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = data.message || JSON.stringify(data, null, 2);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = data.error || JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        // Pre-fill reset token from URL (e.g. when user clicks link from email)
+        function initResetTokenFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token');
+            if (token) {
+                const input = document.getElementById('resetToken');
+                if (input) input.value = token;
+            }
+        }
+
+        function update2FAStatus(tfaEnabled) {
+            const statusEl = document.getElementById('tfaStatusText');
+            const setupArea = document.getElementById('tfaSetupArea');
+            const setupQRArea = document.getElementById('tfaSetupQRArea');
+            const disableArea = document.getElementById('tfaDisableArea');
+            if (tfaEnabled === true) {
+                statusEl.textContent = '2FA is enabled.';
+                setupArea.style.display = 'none';
+                setupQRArea.style.display = 'none';
+                disableArea.style.display = 'block';
+            } else {
+                statusEl.textContent = '2FA is disabled. You can enable it below.';
+                setupArea.style.display = 'block';
+                setupQRArea.style.display = 'none';
+                disableArea.style.display = 'none';
+            }
+        }
+
+        async function submit2FALogin() {
+            const code = document.getElementById('tfaLoginCode').value.trim();
+            const resultDiv = document.getElementById('tfaLoginResult');
+            if (!pending2FAToken || !code) {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Enter the 6-digit code from your app.';
+                return;
+            }
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Verifying...';
+            resultDiv.className = 'result';
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/2fa/verify-login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tempToken: pending2FAToken, code }),
+                });
+                const data = await res.json();
+                if (res.ok && data.user) {
+                    const u = data.user;
+                    accessToken = u.accessToken || '';
+                    refreshTokenValue = u.refreshToken || '';
+                    if (refreshTokenValue) localStorage.setItem('refreshToken', refreshTokenValue);
+                    pending2FAToken = '';
+                    document.getElementById('tfaLoginSection').style.display = 'none';
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = 'Logged in successfully.';
+                    updateTokenDisplay();
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = data.error || 'Invalid code.';
+                }
+            } catch (err) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Error: ' + err.message;
+            }
+        }
+
+        let tfaSetupSecret = '';
+        async function start2FASetup() {
+            if (!accessToken) { alert('Please log in first.'); return; }
+            const qrArea = document.getElementById('tfaSetupQRArea');
+            const resultDiv = document.getElementById('tfaSetupResult');
+            resultDiv.style.display = 'none';
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/2fa/setup`, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + accessToken },
+                });
+                const data = await res.json();
+                if (res.ok && data.secret) {
+                    tfaSetupSecret = data.secret;
+                    document.getElementById('tfaSetupSecret').textContent = data.secret;
+                    const linkEl = document.getElementById('tfaSetupOtpauthLink');
+                    if (linkEl && data.otpauthUrl) {
+                        linkEl.innerHTML = '<a href="' + data.otpauthUrl.replace(/"/g, '&quot;') + '" target="_blank" rel="noopener">Add to authenticator app (otpauth)</a>';
+                    }
+                    const qrContainer = document.getElementById('tfaSetupQRCode');
+                    if (qrContainer && data.otpauthUrl) {
+                        qrContainer.innerHTML = '';
+                        const img = document.createElement('img');
+                        img.alt = 'Scan with your authenticator app';
+                        img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(data.otpauthUrl);
+                        qrContainer.appendChild(img);
+                    }
+                    qrArea.style.display = 'block';
+                    document.getElementById('tfaSetupCode').value = '';
+                } else {
+                    resultDiv.style.display = 'block';
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = data.error || 'Setup failed.';
+                }
+            } catch (err) {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Error: ' + err.message;
+            }
+        }
+
+        async function confirm2FASetup() {
+            const code = document.getElementById('tfaSetupCode').value.trim();
+            const resultDiv = document.getElementById('tfaSetupResult');
+            if (!code) { resultDiv.style.display = 'block'; resultDiv.className = 'result error'; resultDiv.textContent = 'Enter the 6-digit code.'; return; }
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Verifying...';
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/2fa/verify-setup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken },
+                    body: JSON.stringify({ code }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = data.message || '2FA enabled.';
+                    document.getElementById('tfaSetupQRArea').style.display = 'none';
+                    update2FAStatus(true);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = data.error || 'Invalid code.';
+                }
+            } catch (err) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Error: ' + err.message;
+            }
+        }
+
+        async function disable2FA() {
+            const code = document.getElementById('tfaDisableCode').value.trim();
+            const resultDiv = document.getElementById('tfaDisableResult');
+            if (!code) { resultDiv.style.display = 'block'; resultDiv.className = 'result error'; resultDiv.textContent = 'Enter your 6-digit code.'; return; }
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Disabling...';
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/2fa/disable`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken },
+                    body: JSON.stringify({ code }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = data.message || '2FA disabled.';
+                    document.getElementById('tfaDisableCode').value = '';
+                    update2FAStatus(false);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = data.error || 'Failed to disable.';
+                }
+            } catch (err) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Error: ' + err.message;
+            }
+        }
+
+        function openProductsPage() {
+            window.location.href = '/products.html';
+        }
+
+        // Initialize: apply hash (OAuth/2FA), then if we have refresh token but no access token, refresh to get access token in memory.
+        (async function init() {
+            applyTokensFromHash();
+            if (refreshTokenValue && !accessToken) {
+                try {
+                    const r = await fetch(`${API_BASE}/api/auth/refresh`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ refreshToken: refreshTokenValue }),
+                    });
+                    const d = await r.json();
+                    if (r.ok && d.accessToken) {
+                        accessToken = d.accessToken || d.access_token || '';
+                        refreshTokenValue = d.refreshToken || d.refresh_token || '';
+                        if (refreshTokenValue) localStorage.setItem('refreshToken', refreshTokenValue);
+                    }
+                } catch (_) {}
+            }
+            updateTokenDisplay();
+            checkHealth();
+            initResetTokenFromUrl();
+        })();
+    </script>
+</body>
+</html>

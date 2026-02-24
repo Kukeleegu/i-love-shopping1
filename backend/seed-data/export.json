@@ -1,0 +1,177 @@
+{
+  "users": [
+    {
+      "id": "02868a12-af5d-4ba9-9b35-94be04463726",
+      "email": "workshopofsanta.northpole@gmail.com",
+      "username": "Jõuluvana"
+    },
+    {
+      "id": "26155f68-f5c0-4591-b8e0-fbf310483dd1",
+      "email": "dotcomretail.noreply@gmail.com",
+      "username": "dotcom retail"
+    },
+    {
+      "id": "959fd9e1-97dd-4614-8dd1-d1b48d274a24",
+      "email": "siim.siren@gmail.com",
+      "username": "Siim"
+    }
+  ],
+  "categories": [
+    {
+      "id": "8b472af0-ea53-4f3c-871c-492a46fe116e",
+      "name": "Supercar"
+    },
+    {
+      "id": "22cace57-a629-4539-8b38-7fd0c3a04205",
+      "name": "Hypercar"
+    },
+    {
+      "id": "d021fcd1-93c7-48dc-969c-4ced5b649ae7",
+      "name": "Rocketship"
+    }
+  ],
+  "products": [
+    {
+      "id": "cf3fed57-258c-429e-99e3-270b6ce156e2",
+      "name": "Passat",
+      "description": null,
+      "price": 2390,
+      "stockQuantity": 500,
+      "brand": "Volkswagen",
+      "images": [
+        "/uploads/3d7b367d-a47b-49b8-b734-0595a8cb66d0.webp",
+        "/uploads/12b361fc-7b15-4b94-b67f-0064679c43d7.webp",
+        "/uploads/23ff7889-ab43-4eb6-a5f7-f46901992b94.webp",
+        "/uploads/66df6a3f-9449-449e-956d-20d0b4480d16.webp",
+        "/uploads/30d9a517-07c1-4839-aea2-7563f9d722dc.webp"
+      ],
+      "createdByUserId": "02868a12-af5d-4ba9-9b35-94be04463726",
+      "weightKg": null,
+      "weightLbs": null,
+      "lengthCm": null,
+      "widthCm": null,
+      "heightCm": null,
+      "lengthIn": null,
+      "widthIn": null,
+      "heightIn": null,
+      "averageRating": 5,
+      "ratingCount": 3
+    },
+    {
+      "id": "b01563fc-b791-44a1-9e9e-fe98ab5ce091",
+      "name": "Jesko Absolut",
+      "description": null,
+      "price": 3500000,
+      "stockQuantity": 1,
+      "brand": "Koenigsegg",
+      "images": [
+        "/uploads/0c08ed4c-3488-40bd-bafb-bb01e2e50bec.jpg",
+        "/uploads/6a55e4c8-02be-4675-aec4-ba88b4f79c16.jpg",
+        "/uploads/8d97ca98-9405-486f-b26d-85af72a17bd8.jpg",
+        "/uploads/a4117fa5-2d9a-4e36-8903-1a987abeb26f.jpg",
+        "/uploads/d0bcc8a9-a090-4d41-bb24-37977bdb8af5.jpg",
+        "/uploads/eb7a7f4a-7b83-4a8d-b745-f449274868ed.jpg",
+        "/uploads/4253f88e-3075-4aa4-ae6c-9c748cddea00.jpg",
+        "/uploads/4e2ade72-f7d2-4beb-aecd-f5317ea5690b.jpg"
+      ],
+      "createdByUserId": "959fd9e1-97dd-4614-8dd1-d1b48d274a24",
+      "weightKg": 1390,
+      "weightLbs": null,
+      "lengthCm": 461,
+      "widthCm": 203,
+      "heightCm": 121,
+      "lengthIn": null,
+      "widthIn": null,
+      "heightIn": null,
+      "averageRating": 4,
+      "ratingCount": 2
+    },
+    {
+      "id": "9c14cb06-9fc7-4711-960c-9d4850db8229",
+      "name": "Aventador SVJ",
+      "description": null,
+      "price": 749900,
+      "stockQuantity": 1,
+      "brand": "Lamborghini",
+      "images": [
+        "/uploads/41c99f86-86db-42a0-96ac-654d3d6c1852.webp",
+        "/uploads/dc77c5a9-0edd-4eab-af05-99ab3e5f874c.webp",
+        "/uploads/d2723e5d-ca21-4a96-8b5a-096f1c581ae6.webp",
+        "/uploads/a36d5896-8508-4a1a-b5c3-73d8a656a66b.webp",
+        "/uploads/d25e2c5f-dd7e-4b74-bd87-c47dec10d4c8.webp",
+        "/uploads/ed4a437a-3d70-4893-acad-57a6cdea2fca.webp",
+        "/uploads/751e279c-7a70-44e1-8639-ad5c44e3294f.webp",
+        "/uploads/a6f1a076-c4c7-45a0-b671-5091de4d8021.webp"
+      ],
+      "createdByUserId": "959fd9e1-97dd-4614-8dd1-d1b48d274a24",
+      "weightKg": null,
+      "weightLbs": null,
+      "lengthCm": null,
+      "widthCm": null,
+      "heightCm": null,
+      "lengthIn": null,
+      "widthIn": null,
+      "heightIn": null,
+      "averageRating": 3.5,
+      "ratingCount": 2
+    }
+  ],
+  "productCategories": [
+    {
+      "productId": "b01563fc-b791-44a1-9e9e-fe98ab5ce091",
+      "categoryId": "22cace57-a629-4539-8b38-7fd0c3a04205"
+    },
+    {
+      "productId": "9c14cb06-9fc7-4711-960c-9d4850db8229",
+      "categoryId": "8b472af0-ea53-4f3c-871c-492a46fe116e"
+    },
+    {
+      "productId": "cf3fed57-258c-429e-99e3-270b6ce156e2",
+      "categoryId": "d021fcd1-93c7-48dc-969c-4ced5b649ae7"
+    }
+  ],
+  "productRatings": [
+    {
+      "id": "d91e147c-9787-4570-b4af-fea1748c51e6",
+      "userId": "02868a12-af5d-4ba9-9b35-94be04463726",
+      "productId": "b01563fc-b791-44a1-9e9e-fe98ab5ce091",
+      "score": 5
+    },
+    {
+      "id": "6d62fef2-885f-4df6-be56-9e9a9c0d05ab",
+      "userId": "02868a12-af5d-4ba9-9b35-94be04463726",
+      "productId": "9c14cb06-9fc7-4711-960c-9d4850db8229",
+      "score": 4
+    },
+    {
+      "id": "9320f853-c365-42df-b52b-bb11382561b0",
+      "userId": "02868a12-af5d-4ba9-9b35-94be04463726",
+      "productId": "cf3fed57-258c-429e-99e3-270b6ce156e2",
+      "score": 5
+    },
+    {
+      "id": "a1d066bb-a58a-4749-ad25-e5be601b49d4",
+      "userId": "959fd9e1-97dd-4614-8dd1-d1b48d274a24",
+      "productId": "cf3fed57-258c-429e-99e3-270b6ce156e2",
+      "score": 5
+    },
+    {
+      "id": "0d47ddf2-6daf-4e8e-bf26-3f71cdc0daac",
+      "userId": "26155f68-f5c0-4591-b8e0-fbf310483dd1",
+      "productId": "cf3fed57-258c-429e-99e3-270b6ce156e2",
+      "score": 5
+    },
+    {
+      "id": "49b94c10-6c74-4a71-8dce-419bd4e805d4",
+      "userId": "26155f68-f5c0-4591-b8e0-fbf310483dd1",
+      "productId": "b01563fc-b791-44a1-9e9e-fe98ab5ce091",
+      "score": 3
+    },
+    {
+      "id": "5cd92e86-bb4f-4078-907e-1e911086409a",
+      "userId": "26155f68-f5c0-4591-b8e0-fbf310483dd1",
+      "productId": "9c14cb06-9fc7-4711-960c-9d4850db8229",
+      "score": 3
+    }
+  ]
+}
