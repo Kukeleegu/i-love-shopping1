@@ -1,6 +1,12 @@
-# Dot-com Retail — B2C E-commerce Platform
+# Dot-com Retail(Project 1/3) — B2C E-commerce Platform
+
+    Project 1 (Foundation) - Core system that powers everything. Secure user accounts, a well-structured database, and a product catalog that customers can easily search and browse.
+    Project 2 (Commerce) - Shopping experience. Let users fill their carts, guide them through checkout, handle payments safely, and manage their orders from start to finish.
+    Project 3 (Experience) - Complete user interface and management tools. Build all customer-facing pages, create admin dashboards for managing the business, and add the security and performance features needed for real-world use.
 
 A Business-to-Consumer e-commerce backend and frontend: user auth (email/password, Google OAuth, 2FA), product catalog with search and facets, product ratings (1–5 stars), and product management (create/edit/delete by creator). Built with Node.js, Express, Prisma, PostgreSQL; frontend is static HTML/JS served by the backend.
+
+*For learning purposes
 
 ---
 
@@ -113,11 +119,11 @@ erDiagram
 ### Option 1: Docker (recommended — only prerequisite is Docker)
 
 1. Clone the repo and go to the project root (e.g. `cd i-love-shopping1`).
-2. First-time / reviewers: copy env example and set secrets:
+2. First-time: copy env example and set secrets:
    ```bash
    cp backend/.env.example backend/.env
    ```
-   Edit `backend/.env` if you need real values for reCAPTCHA, Google OAuth, or SMTP.
+   Edit `backend/.env` !You need real values for reCAPTCHA, Google OAuth, or SMTP!
 3. Start the stack:
    ```bash
    docker compose up -d
@@ -173,7 +179,3 @@ npx tsx scripts/test-acid.ts
 ```
 
 ---
-
-## Compliance and review
-
-See **REVIEW.md** for a checklist against the assignment (auth, DB, product catalog, ratings, tests, Docker).
